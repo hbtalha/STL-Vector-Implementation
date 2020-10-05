@@ -1,27 +1,31 @@
 #ifndef VECTOR_H_INCLUDED
 #define VECTOR_H_INCLUDED
 
+#include <concepts>
+
+template <typename T>
+concept RequiredInputIterator = std::input_iterator<T>;
+
 
 template<typename T>
 class Vector
 {
-    T* values;
-    std::size_t v_size;
-    std::size_t  v_capacity;
-    bool ctor_initialized = false;
+    T*               values;
+    std::size_t      v_size;
+    std::size_t      v_capacity;
+    bool             ctor_initialized = false;
 
-    template <typename Iter>
-    using required_input_iterator = std::enable_if<std::is_base_of_v<std::input_iterator_tag,
-          typename std::iterator_traits<Iter>::iterator_category >>;
+
 
 public:
-    using iterator = T*;
-    using const_iterator = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using reverse_iterator = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-    using size_type = std::size_t;
+    using iterator =                   T*;
+    using const_iterator =             const T*;
+    using reference =                  T&;
+    using const_reference =            const T&;
+    using reverse_iterator =           std::reverse_iterator<iterator>;
+    using const_reverse_iterator =     std::reverse_iterator<const_iterator>;
+    using size_type =                  std::size_t;
+    using difference_type =            std::ptrdiff_t;
 
     Vector();
     explicit Vector(size_type sz);
@@ -33,32 +37,32 @@ public:
 //    Vector<T>& operator=(Vector<T>&&) noexcept;
     ~Vector();
 
-    template<typename InputInterator, typename = required_input_iterator<InputInterator> >
+    template<RequiredInputIterator InputInterator>//, typename = required_input_iterator<InputInterator> >
     Vector(InputInterator first, InputInterator last);
 
     // element access
-    const_reference front() const;
-    reference front();
-    const_reference back() const;
-    reference back();
-    reference operator[ ](size_type n);
-    const_reference operator[ ](size_type n) const;
-    reference at(size_type n);
-    const_reference at(size_type n) const;
-    constexpr T* data() noexcept;
-    constexpr const_iterator data() const noexcept;
+    const_reference              front() const;
+    reference                    front();
+    const_reference              back() const;
+    reference                    back();
+    reference                    operator[ ](size_type n);
+    const_reference              operator[ ](size_type n) const;
+    reference                    at(size_type n);
+    const_reference              at(size_type n) const;
+    constexpr T*                 data() noexcept;
+    constexpr const_iterator     data() const noexcept;
 
     // iterators
-    iterator begin() noexcept;
-    const_iterator begin() const noexcept;
-    iterator end() noexcept;
-    const_iterator end() const noexcept;
-    const_iterator cbegin() const noexcept;
-    const_iterator  cend() const;
-    reverse_iterator rbegin() noexcept;
-    const_reverse_iterator crbegin() const noexcept;
-    reverse_iterator rend() noexcept;
-    const_reverse_iterator crend() const noexcept;
+    iterator                     begin() noexcept;
+    const_iterator               begin() const noexcept;
+    iterator                     end() noexcept;
+    const_iterator               end() const noexcept;
+    const_iterator               cbegin() const noexcept;
+    const_iterator               cend() const;
+    reverse_iterator             rbegin() noexcept;
+    const_reverse_iterator       crbegin() const noexcept;
+    reverse_iterator             rend() noexcept;
+    const_reverse_iterator       crend() const noexcept;
 
     // Modifiers
     template<typename... ARGS>
@@ -66,7 +70,7 @@ public:
     template<typename... ARGS>
     iterator emplace(const_iterator pos, ARGS&&... args);
     iterator insert(iterator pos, const_reference v );
-    template<typename InputInterator> iterator insert(iterator pos, InputInterator first, InputInterator last );
+    template<RequiredInputIterator InputInterator> iterator insert(iterator pos, InputInterator first, InputInterator last );
     iterator insert(const_iterator pos, const_reference v );
     iterator insert(const_iterator pos, reference& v );
     void insert(iterator pos, size_type n, const_reference v );
@@ -121,7 +125,7 @@ Vector<T>::Vector(const std::initializer_list<T>& i_list) : v_size(i_list.size()
 }
 
 template<typename T>
-template<typename InputInterator, typename SFINAE >
+template<RequiredInputIterator InputInterator>//, typename SFINAE >
 Vector<T>::Vector(InputInterator first, InputInterator last) : v_size(last - first), v_capacity(v_size),
     values(static_cast<T*>(::operator new (sizeof(T) * v_size)))
 {
@@ -269,7 +273,7 @@ typename Vector<T>::const_reference Vector<T>::at (size_type n) const
         throw std::out_of_range("out of range: n (which is " +
                                 std::to_string(n) + ") >= this->size()(which is " + std::to_string(this->size()) + ")");
 
-    return values[n ];
+    return values[ n ];
 }
 
 template<typename T>
@@ -314,7 +318,7 @@ typename Vector<T>::iterator Vector<T>::emplace(const_iterator pos, ARGS&&... ar
 {
     // I found a lot of examples implementing this function but they were confusing so I came up with this, is this ok?
 
-    const size_type dist = pos - begin();
+    const difference_type dist = pos - begin();
 
     if(dist == v_capacity)
     {
@@ -362,7 +366,7 @@ typename Vector<T>::iterator Vector<T>::insert(const_iterator pos, reference& v 
 template<typename T>
 void Vector<T>::insert(iterator pos, size_type n, const_reference v )
 {
-    const size_type dist = pos - begin();
+    const difference_type dist = pos - begin();
 
     if( (v_size + n) > v_capacity)
     {
@@ -381,7 +385,7 @@ void Vector<T>::insert(iterator pos, size_type n, const_reference v )
 template<typename T>
 typename Vector<T>::iterator Vector<T>::insert(const_iterator pos, size_type n, const_reference v )
 {
-    const size_type dist = pos - begin();
+    const difference_type dist = pos - begin();
 
     if(v_size + n > v_capacity)
     {
@@ -403,11 +407,11 @@ typename Vector<T>::iterator Vector<T>::insert(const_iterator pos, size_type n, 
 
 
 template<typename T>
-template<typename InputInterator>
+template<RequiredInputIterator InputInterator>
 typename Vector<T>::iterator Vector<T>::insert(iterator pos, InputInterator first, InputInterator last)
 {
-    size_type dist = last - first;
-    size_type ps = pos - begin();
+    difference_type dist = last - first;
+    difference_type ps = pos - begin();
 
     if(dist == 0)
         return &values[0];
@@ -461,7 +465,7 @@ typename Vector<T>::iterator Vector<T>::erase( const_iterator pos )
      crash like the std::vector, instead it just doesn't do anything and neither does it crach
      when you pass an iterator that is out of range. Not sure if this is good or bad. Any insight? */
 
-    const size_type dist = pos - begin();
+    const difference_type dist = pos - begin();
 
     if(v_size != 0)
         --v_size;
@@ -495,7 +499,7 @@ typename Vector<T>::iterator Vector<T>::erase( const_iterator pos )
 template<typename T>
 typename Vector<T>::iterator Vector<T>::erase(  iterator first, iterator last )
 {
-    const size_type n = last - first;
+    const difference_type n = last - first;
 
     std::move(last, end(), first);
 
