@@ -3,10 +3,6 @@
 
 #include <concepts>
 
-template <typename T>
-concept RequiredInputIterator = std::input_iterator<T>;
-
-
 template<typename T>
 class Vector
 {
@@ -14,8 +10,6 @@ class Vector
     std::size_t      v_size;
     std::size_t      v_capacity;
     bool             ctor_initialized = false;
-
-
 
 public:
     using iterator =                   T*;
@@ -37,7 +31,7 @@ public:
 //    Vector<T>& operator=(Vector<T>&&) noexcept;
     ~Vector();
 
-    template<RequiredInputIterator InputInterator>//, typename = required_input_iterator<InputInterator> >
+    template<std::input_iterator InputInterator>
     Vector(InputInterator first, InputInterator last);
 
     // element access
@@ -70,7 +64,7 @@ public:
     template<typename... ARGS>
     iterator emplace(const_iterator pos, ARGS&&... args);
     iterator insert(iterator pos, const_reference v );
-    template<RequiredInputIterator InputInterator> iterator insert(iterator pos, InputInterator first, InputInterator last );
+    template<std::input_iterator InputInterator> iterator insert(iterator pos, InputInterator first, InputInterator last );
     iterator insert(const_iterator pos, const_reference v );
     iterator insert(const_iterator pos, reference& v );
     void insert(iterator pos, size_type n, const_reference v );
@@ -125,7 +119,7 @@ Vector<T>::Vector(const std::initializer_list<T>& i_list) : v_size(i_list.size()
 }
 
 template<typename T>
-template<RequiredInputIterator InputInterator>//, typename SFINAE >
+template<std::input_iterator InputInterator>
 Vector<T>::Vector(InputInterator first, InputInterator last) : v_size(last - first), v_capacity(v_size),
     values(static_cast<T*>(::operator new (sizeof(T) * v_size)))
 {
@@ -317,7 +311,6 @@ template<typename... ARGS>
 typename Vector<T>::iterator Vector<T>::emplace(const_iterator pos, ARGS&&... args)
 {
     // I found a lot of examples implementing this function but they were confusing so I came up with this, is this ok?
-
     const difference_type dist = pos - begin();
 
     if(dist == v_capacity)
@@ -407,7 +400,7 @@ typename Vector<T>::iterator Vector<T>::insert(const_iterator pos, size_type n, 
 
 
 template<typename T>
-template<RequiredInputIterator InputInterator>
+template<std::input_iterator InputInterator>
 typename Vector<T>::iterator Vector<T>::insert(iterator pos, InputInterator first, InputInterator last)
 {
     difference_type dist = last - first;
@@ -463,7 +456,7 @@ typename Vector<T>::iterator Vector<T>::erase( const_iterator pos )
 
     /*The reason why I chose this is because when I triy erasing on empty Vector and it doesn't
      crash like the std::vector, instead it just doesn't do anything and neither does it crach
-     when you pass an iterator that is out of range. Not sure if this is good or bad. Any insight? */
+     when you pass an iterator that is out of range. Not sure if this is good or bad. Any insight?*/
 
     const difference_type dist = pos - begin();
 
